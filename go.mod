@@ -92,5 +92,5 @@ require (
 
 replace (
 	github.com/openshift/hive => github.com/openshift/hive v1.1.17-0.20220726120844-e78dfd39116d
-	github.com/openshift/hive/apis => github.com/openshift/hive/apis v0.0.0-20220726120844-e78dfd39116d
+	github.com/openshift/hive/apis => github.com/openshift/hive/apis 3f47f7e9f862
 )
