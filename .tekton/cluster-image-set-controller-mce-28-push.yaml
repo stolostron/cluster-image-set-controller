@@ -33,9 +33,7 @@ spec:
   - name: hermetic
     value: "true"
   - name: prefetch-input
-    value:
-    - path: .
-      type: gomod
+    value: '[{"path":".","type":"gomod"}]'
   pipelineSpec:
     description: |
       This pipeline is ideal for building multi-arch container images from a Containerfile while maintaining trust after pipeline customization.
@@ -487,10 +485,10 @@ spec:
       optional: true
     - name: netrc
       optional: true
-  taskRunTemplate: {}
+  taskRunTemplate:
+    serviceAccountName: build-pipeline-cluster-image-set-controller-mce-28
   workspaces:
   - name: git-auth
     secret:
       secretName: '{{ git_auth_secret }}'
 status: {}
-
