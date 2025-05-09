@@ -4,11 +4,23 @@ COPY . .
 ENV GO_PACKAGE github.com/stolostron/cluster-imageset-controller
 
 # Build
-RUN make build --warn-undefined-variables
+RUN make build-konflux --warn-undefined-variables
 
 # Use distroless as minimal base image to package the manager binary
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
 FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
+
+LABEL \
+    name="cluster-image-set-controller" \
+    com.redhat.component="cluster-image-set-controller" \
+    description="Cluster image set controller" \
+    maintainer="acm-contact@redhat.com" \
+    io.k8s.description="Cluster image set controller" \
+    org.label-schema.license="Red Hat Advanced Cluster Management for Kubernetes EULA" \
+    org.label-schema.schema-version="1.0" \
+    summary="Cluster image set controller" \
+    io.k8s.display-name="Cluster image set" \
+    io.openshift.tags="mce acm cluster-image-set"
 
 # Add the binaries
 COPY --from=builder /go/src/github.com/stolostron/cluster-imageset-controller/bin/clusterimageset .
