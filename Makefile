@@ -70,6 +70,10 @@ vendor:
 build: vendor fmt vet ## Build manager binary.
 	GOFLAGS="" go build -o bin/clusterimageset cmd/main.go
 
+.PHONY: build-konflux
+build-konflux:
+	GOFLAGS="" go build -o bin/clusterimageset cmd/main.go
+
 .PHONY: run
 run: fmt vet ## Run a controller from your host.
 	go run cmd/main.go
