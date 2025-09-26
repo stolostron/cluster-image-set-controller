@@ -11,6 +11,7 @@ RUN make build-konflux --warn-undefined-variables
 FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
 
 LABEL \
+      url="https://github.com/stolostron/cluster-image-set-controller" \
     name="cluster-image-set-controller" \
     com.redhat.component="cluster-image-set-controller" \
     description="Cluster image set controller" \
