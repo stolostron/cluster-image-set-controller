@@ -11,8 +11,9 @@ RUN make build-konflux --warn-undefined-variables
 FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
 
 LABEL \
-    name="cluster-image-set-controller" \
+    name="multicluster-engine/cluster-image-set-controller-rhel9" \
     com.redhat.component="cluster-image-set-controller" \
+    cpe="cpe:/a:redhat:multicluster_engine:2.9::el9" \
     description="Cluster image set controller" \
     maintainer="acm-contact@redhat.com" \
     io.k8s.description="Cluster image set controller" \
