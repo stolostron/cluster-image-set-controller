@@ -18,6 +18,7 @@ import (
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
+	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	hivev1 "github.com/openshift/hive/apis/hive/v1"
 	imagesetcontroller "github.com/stolostron/cluster-imageset-controller/pkg/controller"
@@ -70,9 +71,11 @@ var _ = ginkgo.BeforeSuite(func() {
 
 	ctx, cancel = context.WithCancel(context.Background())
 	mgr, err = ctrl.NewManager(restConfig, ctrl.Options{
-		Scheme:                 scheme,
-		MetricsBindAddress:     ":8090",
-		Port:                   9443,
+		Scheme: scheme,
+		Metrics: metricsserver.Options{
+			BindAddress: ":8090",
+		},
+		//Port:                   9443,
 		HealthProbeBindAddress: ":8091",
 		LeaderElection:         false,
 		LeaderElectionID:       "dfe33d85.open-cluster-management.io",
