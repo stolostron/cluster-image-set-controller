@@ -82,6 +82,20 @@ run: fmt vet ## Run a controller from your host.
 docker-build:   # Build docker image with the manager.
 	docker build -t ${IMG} .
 
+# build local linux/amd64 images on non-amd64 hosts such as Apple M3
+# need to create the buildx builder as a fixed name and clean it up after usage
+# Or a new builder is created everytime and it will fail docker buildx image build eventually.
+docker-build-non-amd64:
+	@if docker buildx ls | grep -q "local-builder"; then \
+		echo "Removing existing local-builder..."; \
+		docker buildx rm local-builder; \
+	fi
+
+	docker buildx create --name local-builder --use
+	docker buildx inspect local-builder --bootstrap
+	docker buildx build --platform linux/amd64 -t ${IMG} --load .
+	docker buildx rm local-builder
+
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.
 	docker push ${IMG}
