@@ -15,13 +15,13 @@ import (
 	"time"
 
 	"github.com/ghodss/yaml"
-	"gopkg.in/src-d/go-git.v4"
+	"github.com/go-git/go-git/v6"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 
-	"gopkg.in/src-d/go-git.v4/plumbing"
-	gitclient "gopkg.in/src-d/go-git.v4/plumbing/transport/client"
-	githttp "gopkg.in/src-d/go-git.v4/plumbing/transport/http"
+	"github.com/go-git/go-git/v6/plumbing"
+	"github.com/go-git/go-git/v6/plumbing/transport"
+	githttp "github.com/go-git/go-git/v6/plumbing/transport/http"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -84,7 +84,7 @@ func (r *ClusterImageSetController) cloneGitRepo(destDir string, noCheckOut bool
 
 	r.log.Info(fmt.Sprintf("cloning Git repository:%s, branch:%v to directory:%s, no-checkout:%v", options.URL, options.ReferenceName, destDir, noCheckOut))
 
-	repository, err := git.PlainClone(destDir, false, options)
+	repository, err := git.PlainClone(destDir, options)
 	if err != nil {
 		return repository, err
 	}
@@ -103,6 +103,7 @@ func (r *ClusterImageSetController) getHTTPOptions() (*git.CloneOptions, error) 
 		SingleBranch:      true,
 		RecurseSubmodules: git.DefaultSubmoduleRecursionDepth,
 		ReferenceName:     plumbing.NewBranchReferenceName(gitRepoBranch),
+		Bare:              false,
 	}
 
 	user, accessToken, clientKey, clientCert, err := r.getGitRepoAuthFromSecret()
@@ -197,7 +198,10 @@ func (r *ClusterImageSetController) getHTTPOptions() (*git.CloneOptions, error) 
 			},
 		}
 
-		gitclient.InstallProtocol("https", githttp.NewClient(customClient))
+		r.log.Info("Registering the custom client for git HTTPS requests")
+
+		t := githttp.NewTransport(&githttp.TransportOptions{Client: customClient})
+		transport.Register("https", t)
 	}
 
 	return options, nil

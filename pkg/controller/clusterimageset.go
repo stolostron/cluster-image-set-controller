@@ -24,6 +24,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 )
 
 var (
@@ -118,9 +119,11 @@ func (o *ImagesetOptions) runControllerManager(ctx context.Context, mgr manager.
 	if mgr == nil {
 		var err error
 		mgr, err = ctrl.NewManager(config, ctrl.Options{
-			Scheme:                 scheme,
-			MetricsBindAddress:     o.MetricAddr,
-			Port:                   9443,
+			Scheme: scheme,
+			Metrics: metricsserver.Options{
+				BindAddress: o.MetricAddr,
+			},
+			// Port:                   9443,
 			HealthProbeBindAddress: o.ProbeAddr,
 			LeaderElection:         false,
 			LeaseDuration:          &o.LeaderElectionLeaseDuration,
