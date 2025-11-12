@@ -35,9 +35,7 @@ spec:
   - name: hermetic
     value: 'true'
   - name: prefetch-input
-    value:
-    - path: .
-      type: gomod
+    value: '[{"type": "gomod", "path": "."}]'
   - name: build-source-image
     value: "true"
   pipelineRef:
@@ -49,7 +47,8 @@ spec:
         value: main
       - name: pathInRepo
         value: pipelines/common_mce_2.8.yaml
-  taskRunTemplate: {}
+  taskRunTemplate:
+    serviceAccountName: build-pipeline-cluster-image-set-controller-mce-28
   workspaces:
   - name: git-auth
     secret:
