@@ -13,7 +13,7 @@ FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
 LABEL \
       url="https://github.com/stolostron/cluster-image-set-controller" \
     name="multicluster-engine/cluster-image-set-controller-rhel9" \
-    cpe="cpe:/a:redhat:multicluster_engine:2.11::el9" \
+    cpe="cpe:/a:redhat:multicluster_engine:2.17::el9" \
     com.redhat.component="cluster-image-set-controller" \
     description="Cluster image set controller" \
     maintainer="acm-contact@redhat.com" \
