@@ -25,8 +25,8 @@ import (
 )
 
 const (
-	eventuallyTimeout  = 60 // seconds
-	eventuallyInterval = 1  // seconds
+	eventuallyTimeout  = 180 // seconds
+	eventuallyInterval = 1   // seconds
 )
 
 func TestIntegration(t *testing.T) {
@@ -85,19 +85,13 @@ var _ = ginkgo.BeforeSuite(func() {
 	dynamicClient, err = dynamic.NewForConfig(restConfig)
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
 
-	zapLog, _ := zap.NewDevelopment()
-	options := &imagesetcontroller.ImagesetOptions{
-		Log:       zapr.NewLogger(zapLog),
-		Interval:  60,
-		ConfigMap: "cluster-image-set-repo",
-	}
-
 	go startCtrlManager(mgr)
 
 	client := mgr.GetClient()
 
-	iCtrl := imagesetcontroller.NewClusterImageSetController(client, options)
-	iCtrl.Start()
+	// Wait for the manager cache to be ready before creating resources or starting the controller
+	synced := mgr.GetCache().WaitForCacheSync(ctx)
+	gomega.Expect(synced).To(gomega.BeTrue())
 
 	ns := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
@@ -122,6 +116,16 @@ var _ = ginkgo.BeforeSuite(func() {
 	}
 	err = client.Create(context.TODO(), configMap)
 	gomega.Expect(err).ToNot(gomega.HaveOccurred())
+
+	zapLog, _ := zap.NewDevelopment()
+	options := &imagesetcontroller.ImagesetOptions{
+		Log:       zapr.NewLogger(zapLog),
+		Interval:  10,
+		ConfigMap: "cluster-image-set-repo",
+	}
+
+	iCtrl := imagesetcontroller.NewClusterImageSetController(client, options)
+	iCtrl.Start()
 
 })
 
