@@ -20,7 +20,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/go-git/go-git/v6/plumbing"
-	"github.com/go-git/go-git/v6/plumbing/transport"
+	"github.com/go-git/go-git/v6/plumbing/client"
 	githttp "github.com/go-git/go-git/v6/plumbing/transport/http"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -111,11 +111,12 @@ func (r *ClusterImageSetController) getHTTPOptions() (*git.CloneOptions, error) 
 		return nil, err
 	}
 
+	var clientOpts []client.Option
 	if user != "" && accessToken != "" {
-		options.Auth = &githttp.BasicAuth{
+		clientOpts = append(clientOpts, client.WithHTTPAuth(&githttp.BasicAuth{
 			Username: user,
 			Password: accessToken,
-		}
+		}))
 	}
 
 	installProtocol := false
@@ -200,10 +201,10 @@ func (r *ClusterImageSetController) getHTTPOptions() (*git.CloneOptions, error) 
 
 		r.log.Info("Registering the custom client for git HTTPS requests")
 
-		t := githttp.NewTransport(&githttp.TransportOptions{Client: customClient})
-		transport.Register("https", t)
+		clientOpts = append(clientOpts, client.WithHTTPClient(customClient))
 	}
 
+	options.ClientOptions = clientOpts
 	return options, nil
 }
 
