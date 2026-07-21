@@ -158,6 +158,10 @@ func TestGetCertChain(t *testing.T) {
 func TestGetHTTPOptions(t *testing.T) {
 	c := initClient()
 
+	configMapDefault := getDefaultConfigMap()
+	configMapDefault.Name = "configmap-default"
+	_ = c.Create(context.TODO(), configMapDefault)
+
 	configMapInsecureSkipVerify := getDefaultConfigMap()
 	configMapInsecureSkipVerify.Data[InsecureSkipVerify] = "true"
 	configMapInsecureSkipVerify.Name = "configmap-skip-verify"
@@ -215,33 +219,75 @@ func TestGetHTTPOptions(t *testing.T) {
 		lastCommitID string
 	}
 
-	f1 := ctrlFields{
-		client:       c,
-		log:          zapr.NewLogger(zapLog),
-		configMap:    "configmap-skip-verify",
-		secret:       "secretUser",
-		lastCommitID: "abc",
-	}
-	f2 := ctrlFields{
-		client:    c,
-		log:       zapr.NewLogger(zapLog),
-		configMap: "configmap-cacert",
-		secret:    "secretCert",
-	}
 	tests := []struct {
-		name             string
-		controllerFields ctrlFields
-		wantErr          bool
+		name              string
+		controllerFields  ctrlFields
+		wantErr           bool
+		wantClientOptions int
 	}{
 		{
-			name:             "insecureSkipVerify and user auth",
-			controllerFields: f1,
-			wantErr:          false,
+			name: "no auth no tls",
+			controllerFields: ctrlFields{
+				client:    c,
+				log:       zapr.NewLogger(zapLog),
+				configMap: "configmap-default",
+			},
+			wantErr:           false,
+			wantClientOptions: 0,
 		},
 		{
-			name:             "key and cert auth",
-			controllerFields: f2,
-			wantErr:          true,
+			name: "basic auth only",
+			controllerFields: ctrlFields{
+				client:    c,
+				log:       zapr.NewLogger(zapLog),
+				configMap: "configmap-default",
+				secret:    "secretUser",
+			},
+			wantErr:           false,
+			wantClientOptions: 1,
+		},
+		{
+			name: "insecureSkipVerify and user auth",
+			controllerFields: ctrlFields{
+				client:       c,
+				log:          zapr.NewLogger(zapLog),
+				configMap:    "configmap-skip-verify",
+				secret:       "secretUser",
+				lastCommitID: "abc",
+			},
+			wantErr:           false,
+			wantClientOptions: 2,
+		},
+		{
+			name: "insecureSkipVerify no auth",
+			controllerFields: ctrlFields{
+				client:    c,
+				log:       zapr.NewLogger(zapLog),
+				configMap: "configmap-skip-verify",
+			},
+			wantErr:           false,
+			wantClientOptions: 1,
+		},
+		{
+			name: "ca cert no auth",
+			controllerFields: ctrlFields{
+				client:    c,
+				log:       zapr.NewLogger(zapLog),
+				configMap: "configmap-cacert",
+			},
+			wantErr:           false,
+			wantClientOptions: 1,
+		},
+		{
+			name: "invalid mtls key and cert",
+			controllerFields: ctrlFields{
+				client:    c,
+				log:       zapr.NewLogger(zapLog),
+				configMap: "configmap-cacert",
+				secret:    "secretCert",
+			},
+			wantErr:           true,
+			wantClientOptions: 0,
 		},
 	}
 	for _, tt := range tests {
@@ -254,10 +300,17 @@ func TestGetHTTPOptions(t *testing.T) {
 				secret:       tt.controllerFields.secret,
 				lastCommitID: tt.controllerFields.lastCommitID,
 			}
-			_, err := r.getHTTPOptions()
+			opts, err := r.getHTTPOptions()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ClusterImageSetController.getHTTPOptions() error = %v, wantErr %v", err, tt.wantErr)
 				return
+			}
+			if err != nil {
+				return
+			}
+			if len(opts.ClientOptions) != tt.wantClientOptions {
+				t.Errorf("ClusterImageSetController.getHTTPOptions() ClientOptions len = %d, want %d",
+					len(opts.ClientOptions), tt.wantClientOptions)
 			}
 		})
 	}
